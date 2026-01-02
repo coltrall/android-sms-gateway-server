@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
+import net.folivo.android.smsGatewayServer.BuildConfig
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
@@ -68,23 +69,26 @@ class RestApiWorker(appContext: Context, workerParams: WorkerParameters) :
             .orEmpty()
         val keyStorePassword = inputData.getString("keyStorePassword")
             .orEmpty()
-        val certificateUri = Uri.parse(
-            inputData.getString("certificateUriStr")
-                .orEmpty()
-        )
+        val certificateUriStr = inputData.getString("certificateUriStr")
+        val certificateUri = if (!certificateUriStr.isNullOrEmpty()) Uri.parse(certificateUriStr) else null
 
-        val certificateFileNameWithoutExtension: String
-        val keyStore: KeyStore
+        val certificateFileNameWithoutExtension: String?
+        val keyStore: KeyStore?
         val appVersion: String = BuildConfig.VERSION_NAME
 
-        try {
-            certificateFileNameWithoutExtension =
-                getKeyStoreFileName(applicationContext.contentResolver, certificateUri)
-            keyStore =
-                loadKeyStore(applicationContext.contentResolver, certificateUri, keyStorePassword)
-        } catch (exception: java.lang.Exception) {
-            Log.w(logTag, exception.toString())
-            return@coroutineScope Result.failure()
+        if (certificateUri != null) {
+            try {
+                certificateFileNameWithoutExtension =
+                    getKeyStoreFileName(applicationContext.contentResolver, certificateUri)
+                keyStore =
+                    loadKeyStore(applicationContext.contentResolver, certificateUri, keyStorePassword)
+            } catch (exception: java.lang.Exception) {
+                Log.w(logTag, "Failed to load certificate: $exception")
+                return@coroutineScope Result.failure()
+            }
+        } else {
+            certificateFileNameWithoutExtension = null
+            keyStore = null
         }
 
 
@@ -92,22 +96,25 @@ class RestApiWorker(appContext: Context, workerParams: WorkerParameters) :
             val server = embeddedServer(
                 Netty,
                 applicationEngineEnvironment {
-
-                    sslConnector(
-                        keyStore = keyStore,
-                        keyAlias = certificateFileNameWithoutExtension,
-                        keyStorePassword = {
-                            keyStorePassword.toCharArray()
-                        },
-                        privateKeyPassword = { "".toCharArray() }) {
-                        host = "0.0.0.0"
-                        port = 9090
+                    if (keyStore != null && certificateFileNameWithoutExtension != null) {
+                        sslConnector(
+                            keyStore = keyStore,
+                            keyAlias = certificateFileNameWithoutExtension,
+                            keyStorePassword = {
+                                keyStorePassword.toCharArray()
+                            },
+                            privateKeyPassword = { "".toCharArray() }) {
+                            host = "0.0.0.0"
+                            port = 9090
+                        }
+                        Log.i(logTag, "Server starting on https://0.0.0.0:9090")
+                    } else {
+                        connector {
+                            host = "0.0.0.0"
+                            port = 8080
+                        }
+                        Log.i(logTag, "Server starting on http://0.0.0.0:8080")
                     }
-
-//                    connector {
-//                        host = "0.0.0.0"
-//                        port = 8080
-//                    }
 
                     module {
 

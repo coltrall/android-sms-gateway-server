@@ -12,7 +12,6 @@ import android.telephony.SmsManager
 import android.util.Log
 import io.ktor.http.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.sendBlocking
 import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.*
@@ -43,7 +42,7 @@ class MessageManager(private val applicationContext: Context) {
 
         val broadcastReceiver = object : BroadcastReceiver(){
             override fun onReceive(context: Context?, intent: Intent?) {
-                sendStatusChannel.sendBlocking(resultCode)
+                sendStatusChannel.trySend(resultCode)
             }
         }
         applicationContext.registerReceiver(broadcastReceiver, IntentFilter(sentAction))
@@ -58,7 +57,7 @@ class MessageManager(private val applicationContext: Context) {
             val sentIntent = PendingIntent.getBroadcast(applicationContext,
                 Random().nextInt(),
                 Intent(sentAction),
-                PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
             smsManager.sendTextMessage(
                 recipientPhoneNumber,
@@ -81,7 +80,7 @@ class MessageManager(private val applicationContext: Context) {
             val sentIntents = ArrayList<PendingIntent>()
 
             for (i in 0 until multipartMessageArray.count()) {
-                sentIntents.add(PendingIntent.getBroadcast(applicationContext, i, Intent(sentAction), 0))
+                sentIntents.add(PendingIntent.getBroadcast(applicationContext, i, Intent(sentAction), PendingIntent.FLAG_IMMUTABLE))
             }
             smsManager.sendMultipartTextMessage(
                 recipientPhoneNumber,

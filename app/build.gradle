@@ -1,9 +1,11 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
 
 android {
-    compileSdkVersion 29
+    namespace 'net.folivo.android.smsGatewayServer'
+    compileSdkVersion 34
 
     testOptions {
         unitTests.returnDefaultValues = true
@@ -19,7 +21,7 @@ android {
     defaultConfig {
         applicationId "net.folivo.android.smsGatewayServer"
         minSdkVersion 27
-        targetSdkVersion 29
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
 
@@ -33,8 +35,15 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     packagingOptions {
-        exclude 'META-INF/*'
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += 'META-INF/*'
+        }
     }
 
     kotlinOptions {
@@ -47,44 +56,44 @@ android {
 
 dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    def fragment_version = "1.3.0-alpha08"
-    def kotest_version = "4.2.5"
-    def activity_version = "1.2.0-alpha08"
-    def mockk_version = "1.10.0"
-    def ktor_version = "1.4.1"
+    def fragment_version = "1.6.2"
+    def kotest_version = "5.8.0"
+    def activity_version = "1.8.2"
+    def mockk_version = "1.13.9"
+    def ktor_version = "1.6.8"
 
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     testImplementation "io.kotest:kotest-runner-junit5:$kotest_version" // for kotest framework
     testImplementation "io.kotest:kotest-assertions-core:$kotest_version"
     // for kotest core jvm assertions
     testImplementation "io.kotest:kotest-property:$kotest_version" // for kotest property test
-    testImplementation "io.kotest:kotest-extensions-robolectric:4.0.1"
+    testImplementation "io.kotest:kotest-extensions-robolectric:0.5.0"
     testImplementation "io.mockk:mockk:$mockk_version"
-    testImplementation 'androidx.test:core:1.3.0'
-    testImplementation 'org.robolectric:robolectric:4.4'
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'junit:junit:4.13.2'
 
 
 
-    implementation "io.ktor:ktor:$ktor_version"
+    implementation "io.ktor:ktor-server-core:$ktor_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
     implementation "io.ktor:ktor-gson:$ktor_version"
     implementation "io.ktor:ktor-auth:$ktor_version"
     implementation "io.ktor:ktor-jackson:$ktor_version"
     implementation "io.ktor:ktor-network-tls-certificates:$ktor_version"
     implementation "io.ktor:ktor-client-cio:$ktor_version"
-    implementation "androidx.work:work-runtime-ktx:2.4.0"
+    implementation "androidx.work:work-runtime-ktx:2.9.0"
     implementation "androidx.activity:activity-ktx:$activity_version"
-    implementation "androidx.fragment:fragment:$fragment_version"
-    implementation 'androidx.core:core-ktx:1.3.2'
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.3'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.10"
-    implementation 'com.google.android.material:material:1.2.1'
+    implementation "androidx.fragment:fragment-ktx:$fragment_version"
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'ch.qos.logback:logback-classic:1.2.13'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
+    implementation 'com.google.android.material:material:1.11.0'
 
 
 }

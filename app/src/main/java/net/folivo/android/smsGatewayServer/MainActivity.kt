@@ -120,10 +120,8 @@ class MainActivity : AppCompatActivity() {
 
             if (!isCertificateAvailable()) {
                 Toast.makeText(this, "Error loading certificate", Toast.LENGTH_SHORT).show()
-                findViewById<SwitchCompat>(R.id.switchStartServer).isEnabled = false
             } else {
                 Toast.makeText(this, "Certificate loaded successfully", Toast.LENGTH_SHORT).show()
-                findViewById<SwitchCompat>(R.id.switchStartServer).isEnabled = true
             }
         }
 
@@ -157,15 +155,10 @@ class MainActivity : AppCompatActivity() {
                     editor.putString(getString(R.string.saved_username_key), txtUserName)
                     editor.commit()
 
-
-
-                    if (!isCertificateAvailable()) {
-                        Toast.makeText(this, "Error loading the certificate", Toast.LENGTH_SHORT)
+                    val certUriStr = sharedPref.getString(getString(R.string.saved_certificate_uri_str_key), "")
+                    if (!certUriStr.isNullOrEmpty() && !isCertificateAvailable()) {
+                        Toast.makeText(this, "Error loading the certificate. Falling back to HTTP.", Toast.LENGTH_SHORT)
                                 .show()
-                        findViewById<SwitchCompat>(R.id.switchStartServer).isEnabled = false
-                        findViewById<Button>(R.id.buttonCheckCertificateAvailability).isEnabled = true
-                        viewButton.toggle()
-                        return@setOnCheckedChangeListener
                     }
 
 
@@ -184,10 +177,7 @@ class MainActivity : AppCompatActivity() {
                                     )
                                     .putString(
                                             "certificateUriStr",
-                                            sharedPref.getString(
-                                                    getString(R.string.saved_certificate_uri_str_key),
-                                                    null
-                                            )
+                                            if (isCertificateAvailable()) certUriStr else null
                                     )
                                     .putString(
                                             "keyStorePassword",
@@ -279,7 +269,7 @@ class MainActivity : AppCompatActivity() {
             switch.toggle()
         }
         findViewById<Button>(R.id.buttonCheckCertificateAvailability).isEnabled = !isUniqueWorkScheduled(uniqueWorkName)
-        switch.isEnabled = isCertificateAvailable()
+        switch.isEnabled = true
     }
 
 
@@ -341,6 +331,8 @@ class MainActivity : AppCompatActivity() {
 
         val certificateUriStr =
                 sharedPref.getString(getString(R.string.saved_certificate_uri_str_key), "").orEmpty()
+        if (certificateUriStr.isEmpty()) return false
+
         val keyStorePassword =
                 sharedPref.getString(getString(R.string.saved_keyStore_password_key), "").orEmpty()
         val keyStore: KeyStore
